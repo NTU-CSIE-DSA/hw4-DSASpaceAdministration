@@ -1,0 +1,113 @@
+@testset sample1
+manual sample1.in
+
+@testset sample2
+manual sample2.in
+
+@testset sample3
+manual sample3.in
+
+@testset 1_public
+gen -q=10 -preset=0 1_public_1
+gen -q=100 -preset=0 1_public_2
+gen -q=1000 -preset=0 1_public_3
+gen -q=1000 -preset=0 -invalid=3 1_public_4
+gen -q=1000 -preset=0 1_public_5
+gen -q=1000 -preset=0 1_public_6
+gen -q=1000 -preset=0 1_public_7
+
+@testset 1_private
+gen -q=10 -preset=0 1_private_1
+gen -q=100 -preset=0 1_private_2
+gen -q=1000 -preset=0 1_private_3
+gen -q=1000 -preset=0 -invalid=3 1_private_4
+gen -q=1000 -preset=0 1_private_5
+gen -q=1000 -preset=0 1_private_6
+gen -q=1000 -preset=0 1_private_7
+
+@testset 2_public
+gen -q=100 -preset=1 2_public_1
+gen -q=100 -preset=1 2_public_2
+gen -q=1000 -preset=1 -invalid=3 2_public_3
+gen -q=1000 -preset=1 2_public_4
+gen -q=1000 -preset=1 2_public_5
+gen -q=1000 -preset=1 2_public_6
+gen -q=1000 -preset=1 2_public_7
+
+@testset 2_private
+gen -q=10 -preset=1 2_private_1
+gen -q=100 -preset=1 2_private_2
+gen -q=1000 -preset=1 -invalid=3 2_private_3
+gen -q=1000 -preset=1 2_private_4
+gen -q=1000 -preset=1 2_private_5
+gen -q=1000 -preset=1 2_private_6
+gen -q=1000 -preset=1 2_private_7
+
+@testset 3_public
+
+@testset 3_private
+
+@testset 4_public
+
+@testset 4_private
+
+@testset 5_public
+
+@testset 5_private
+
+@testset 6_public
+
+@testset 6_private
+
+@testset 1
+@include 1_public
+@include 1_private
+
+@testset 2
+@include 2_public
+@include 2_private
+
+@testset 3
+@include 3_public
+@include 3_private
+
+@testset 4
+@include 4_public
+@include 4_private
+
+@testset 5
+@include 5_public
+@include 5_private
+
+@subtask samples
+@include sample1
+@include sample2
+@include sample3
+
+@subtask subtask1
+@include sample1
+@include 1
+
+@subtask subtask2
+@include subtask1
+@include samples
+@include 2
+
+@subtask subtask3
+@include sample1
+@include 3
+
+@subtask subtask4
+@include subtask1
+@include subtask3
+@include sample1
+@include sample2
+@include 4
+
+@subtask subtask5
+@include subtask1
+@include subtask2
+@include subtask3
+@include subtask4
+@include samples
+@include 5
