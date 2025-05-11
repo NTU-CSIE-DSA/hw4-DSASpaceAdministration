@@ -1,5 +1,14 @@
 {
-    "clever_bruteforce.cpp": { "verdict": "model_solution" },
+
+    "correct.cpp": { "verdict": "model_solution" },
+    "clever_bruteforce.cpp": {
+        "verdict": "time_limit",
+        "except": {
+            "samples": "correct",
+            "subtask1": "correct",
+            "subtask2": "correct"
+        }
+    },
     "subtask3.cpp": {
         "verdict": "incorrect",
         "except" : {
