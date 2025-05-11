@@ -20,9 +20,15 @@ using ordered_set = tree<T, null_type, std::less<T>, rb_tree_tag,
 #include "testlib.h"
 using namespace std;
 
-vector<int> pool;
+vector<int> pool, querypool, modpool;
 ordered_set<int> avail_keys;
-int rnd_op() { return pool[rnd.next((int)pool.size())]; }
+int rnd_op(int idx, int q) {
+  if (idx < q / 100)
+    return modpool[rnd.next((int)modpool.size())];
+  if (q - idx < q / 100)
+    return querypool[rnd.next((int)querypool.size())];
+  return pool[rnd.next((int)pool.size())];
+}
 int get_exist_key() {
   if (avail_keys.size() == 0) {
     return rnd.next(MINKEY, MAXKEY);
@@ -51,6 +57,15 @@ int main(int argc, char *argv[]) {
 
   vector<int> distri = PRESET[preset_id];
   for (int t = 0; t < 6; ++t) { // add operations to pool
+    if (t >= 4) {
+      for (int i = 0; i < distri[t]; ++i) {
+        querypool.push_back(t + 1);
+      }
+    } else {
+      for (int i = 0; i < distri[t]; ++i) {
+        modpool.push_back(t + 1);
+      }
+    }
     for (int i = 0; i < distri[t]; ++i) {
       pool.push_back(t + 1);
     }
@@ -59,7 +74,7 @@ int main(int argc, char *argv[]) {
   cout << q << "\n";
 
   for (int i = 0; i < q; ++i) {
-    int type = rnd_op();
+    int type = rnd_op(i, q);
     bool valid = rnd.next(invalid_percentage) != 0;
     if (valid && avail_keys.size() == 0) {
       type = 1;

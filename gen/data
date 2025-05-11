@@ -13,8 +13,6 @@ gen -q=1000 -preset=0 1_public_2
 gen -q=1000 -preset=0 1_public_3
 gen -q=1000 -preset=0 -invalid=3 1_public_4
 gen -q=1000 -preset=0 1_public_5
-gen -q=1000 -preset=0 1_public_6
-gen -q=1000 -preset=0 1_public_7
 
 @testset 1_private
 gen -q=100 -preset=0 1_private_1
@@ -22,54 +20,68 @@ gen -q=1000 -preset=0 1_private_2
 gen -q=1000 -preset=0 1_private_3
 gen -q=1000 -preset=0 -invalid=3 1_private_4
 gen -q=1000 -preset=0 1_private_5
-gen -q=1000 -preset=0 1_private_6
-gen -q=1000 -preset=0 1_private_7
 
 @testset 2_public
-gen -q=100 -preset=1 2_public_1
 gen -q=1000 -preset=1 2_public_2
 gen -q=1000 -preset=1 -invalid=3 2_public_3
-gen -q=1000 -preset=1 2_public_4
-gen -q=1000 -preset=1 2_public_5
-gen -q=1000 -preset=1 2_public_6
-gen -q=1000 -preset=1 2_public_7
+gen -q=1000 -preset=1 -invalid=3 2_public_4
+gen -q=1000 -preset=1 2_public_5 -max-move=100
+gen -q=1000 -preset=1 2_public_6 -max-move=100
 
 @testset 2_private
-gen -q=100 -preset=1 2_private_1
 gen -q=1000 -preset=1 2_private_2
 gen -q=1000 -preset=1 -invalid=3 2_private_3
-gen -q=1000 -preset=1 2_private_4
-gen -q=1000 -preset=1 2_private_5
-gen -q=1000 -preset=1 2_private_6
-gen -q=1000 -preset=1 2_private_7
+gen -q=1000 -preset=1 -invalid=3 2_private_4
+gen -q=1000 -preset=1 2_private_5 -max-move=100
+gen -q=1000 -preset=1 2_private_6 -max-move=100
 
 @testset 3_public
-gen -q=1000 -preset=2 3_public_1
-gen -q=1000 -preset=2 3_public_2
+gen -q=200000 -preset=2 3_public_1
+gen -q=200000 -preset=2 3_public_2
 gen -q=200000 -preset=2 3_public_3
+gen -q=200000 -preset=2 3_public_5 -max-move=100
+gen -q=200000 -preset=2 3_public_6 -max-move=100
 
 @testset 3_private
-gen -q=1000 -preset=2 3_private_1
-gen -q=1000 -preset=2 3_private_2
+gen -q=200000 -preset=2 3_private_1
+gen -q=200000 -preset=2 3_private_2
 gen -q=200000 -preset=2 3_private_3
+gen -q=200000 -preset=2 3_private_5 -max-move=100
+gen -q=200000 -preset=2 3_private_6 -max-move=100
 
 @testset 4_public
-gen -q=1000 -preset=3 4_public_1
-gen -q=1000 -preset=3 4_public_2
+gen -q=200000 -preset=3 4_public_1
+gen -q=200000 -preset=3 4_public_2
 gen -q=200000 -preset=3 4_public_3
+gen -q=200000 -preset=3 4_public_5 -max-move=100
+gen -q=200000 -preset=3 4_public_6 -max-move=100
 
 @testset 4_private
-gen -q=1000 -preset=3 4_private_1
-gen -q=1000 -preset=3 4_private_2
+gen -q=200000 -preset=3 4_private_1
+gen -q=200000 -preset=3 4_private_2
 gen -q=200000 -preset=3 4_private_3
+gen -q=200000 -preset=3 4_private_5 -max-move=100
+gen -q=200000 -preset=3 4_private_6 -max-move=100
 
 @testset 5_public
-gen -q=200000 -preset=6 5_public_1
+edge -q=200000 -preset=5 5_public_1
 gen -q=200000 -preset=4 5_public_2
+gen -q=200000 -preset=4 5_public_3 -max-move=100
+gen -q=200000 -preset=5 5_public_4
+gen -q=200000 -preset=5 5_public_5 -max-move=100
+gen -q=200000 -preset=6 5_public_6
+edge -q=200000 -preset=5 5_public_7
+edge -q=200000 -preset=6 5_public_8
 
 @testset 5_private
-gen -q=200000 -preset=6 5_private_1
+edge -q=200000 -preset=5 5_private_1
 gen -q=200000 -preset=4 5_private_2
+gen -q=200000 -preset=4 5_private_3 -max-move=100
+gen -q=200000 -preset=5 5_private_4
+gen -q=200000 -preset=5 5_private_5 -max-move=100
+gen -q=200000 -preset=6 5_private_6
+edge -q=200000 -preset=5 5_private_7
+edge -q=200000 -preset=6 5_private_8
 
 @testset 1
 @include 1_public
