@@ -44,20 +44,28 @@ gen -q=1000 -preset=1 2_private_6
 gen -q=1000 -preset=1 2_private_7
 
 @testset 3_public
+gen -q=1000 -preset=2 3_public_1
+gen -q=1000 -preset=2 3_public_2
 
 @testset 3_private
+gen -q=1000 -preset=2 3_private_1
+gen -q=1000 -preset=2 3_private_2
 
 @testset 4_public
+gen -q=1000 -preset=3 4_public_1
+gen -q=1000 -preset=3 4_public_2
 
 @testset 4_private
+gen -q=1000 -preset=3 4_private_1
+gen -q=1000 -preset=3 4_private_2
 
 @testset 5_public
+gen -q=1000 -preset=4 5_public_1
+gen -q=1000 -preset=4 5_public_2
 
 @testset 5_private
-
-@testset 6_public
-
-@testset 6_private
+gen -q=1000 -preset=4 5_private_1
+gen -q=1000 -preset=4 5_private_2
 
 @testset 1
 @include 1_public

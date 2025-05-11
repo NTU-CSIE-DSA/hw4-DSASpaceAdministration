@@ -1,3 +1,9 @@
 {
-    "correct.cpp": { "verdict": "model_solution" }
+    "clever_bruteforce.cpp": { "verdict": "model_solution" },
+    "subtask3.cpp": {
+        "verdict": "partially_correct",
+        "except" : {
+            "subtask3": "correct"
+        }
+    }
 }
