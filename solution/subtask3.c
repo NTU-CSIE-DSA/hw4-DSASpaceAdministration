@@ -45,8 +45,8 @@ Node *createNode(int key, int p) {
   for (int i = 0; i < MAXH; ++i) {
     newNode->cnt[0][i] = newNode->cnt[1][i] = 0;
   }
-  newNode->cnt[newNode->color == BLACK][0] = p;
   newNode->color = RED; // New nodes are initially RED (CLRS, Ch. 13.3)
+  newNode->cnt[newNode->color == BLACK][0] = p;
   newNode->parent = NIL;
   newNode->left = NIL;
   newNode->right = NIL;
@@ -74,6 +74,19 @@ void pull(Node *x) {
   x->cnt[x->color == BLACK][0] = x->p;
   x->cnt[x->color != BLACK][0] = 0;
 }
+void pull_layers(Node *x, int layers) {
+  while (x != NIL && layers) {
+    pull(x);
+    x = x->parent;
+    --layers;
+  }
+}
+void pull_til_root(Node *x) {
+  while (x != NIL) {
+    pull(x);
+    x = x->parent;
+  }
+}
 
 // Left Rotate (CLRS, Ch. 13.2)
 void leftRotate(Node **root, Node *x) {
@@ -94,8 +107,7 @@ void leftRotate(Node **root, Node *x) {
   }
   y->left = x;
   x->parent = y;
-  pull(x);
-  pull(y);
+  pull_til_root(x);
 }
 
 // Right Rotate (CLRS, Ch. 13.2)
@@ -117,9 +129,7 @@ void rightRotate(Node **root, Node *y) {
   }
   x->right = y;
   y->parent = x;
-
-  pull(y);
-  pull(x);
+  pull_til_root(y);
 }
 
 // RB-INSERT-FIXUP (CLRS, Ch. 13.3)
@@ -133,8 +143,8 @@ void rbInsertFixup(Node **root, Node *z) {
         setColor(z->parent, BLACK);
         setColor(y, BLACK);
         setColor(z->parent->parent, RED);
+        pull_layers(z->parent->parent, 3);
         z = z->parent->parent;
-        pull(z);
       } else {
         if (z ==
             z->parent
@@ -145,7 +155,7 @@ void rbInsertFixup(Node **root, Node *z) {
         // Case 3: Uncle y is BLACK and z is a left child
         setColor(z->parent, BLACK);
         setColor(z->parent->parent, RED);
-        pull(z->parent->parent);
+        pull_layers(z->parent->parent, 3);
         rightRotate(root, z->parent->parent);
       }
     } else { // Case 4, 5, 6: z.p is right child (symmetric to 1, 2, 3)
@@ -154,8 +164,8 @@ void rbInsertFixup(Node **root, Node *z) {
         setColor(z->parent, BLACK);
         setColor(y, BLACK);
         setColor(z->parent->parent, RED);
+        pull_layers(z->parent->parent, 3);
         z = z->parent->parent;
-        pull(z);
       } else {
         if (z ==
             z->parent->left) { // Case 5: Uncle y is BLACK and z is a left child
@@ -165,16 +175,13 @@ void rbInsertFixup(Node **root, Node *z) {
         // Case 6: Uncle y is BLACK and z is a right child
         setColor(z->parent, BLACK);
         setColor(z->parent->parent, RED);
-        pull(z->parent->parent);
+        pull_layers(z->parent->parent, 3);
         leftRotate(root, z->parent->parent);
       }
     }
   }
   setColor(*root, BLACK); // Ensure root is always BLACK (Property 2)
-  while (z != NIL) {
-    pull(z);
-    z = z->parent;
-  }
+  pull_til_root(z);
 }
 
 // RB-INSERT (CLRS, Ch. 13.3)
@@ -204,7 +211,7 @@ void rbInsert(Node **root, int key, int p) {
   z->left = NIL;
   z->right = NIL;
   setColor(z, RED);
-  pull(y);
+  pull_til_root(z->parent); // z->parent = y
 
   rbInsertFixup(root, z);
 }
