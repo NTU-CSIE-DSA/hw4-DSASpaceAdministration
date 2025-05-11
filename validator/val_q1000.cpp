@@ -1,7 +1,7 @@
 #include "testlib.h"
 using namespace std;
 
-const int MAXQ = 200000;
+const int MAXQ = 1000;
 const int MINP = 1;
 const int MAXP = 1e9;
 const int MINKEY = 1;
