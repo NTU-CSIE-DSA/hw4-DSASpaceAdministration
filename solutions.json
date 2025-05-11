@@ -1,9 +1,17 @@
 {
     "clever_bruteforce.cpp": { "verdict": "model_solution" },
     "subtask3.cpp": {
-        "verdict": "partially_correct",
+        "verdict": "incorrect",
         "except" : {
             "subtask3": "correct"
+        }
+    },
+    "subtask4.cpp" : {
+        "verdict": "incorrect",
+        "except": {
+            "subtask1": "correct",
+            "subtask3": "correct",
+            "subtask4": "correct"
         }
     }
 }

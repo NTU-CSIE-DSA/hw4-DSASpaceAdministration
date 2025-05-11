@@ -45,8 +45,8 @@ Node *createNode(int key, int p) {
   for (int i = 0; i < MAXH; ++i) {
     newNode->cnt[0][i] = newNode->cnt[1][i] = 0;
   }
-  newNode->cnt[newNode->color == BLACK][0] = p;
   newNode->color = RED; // New nodes are initially RED (CLRS, Ch. 13.3)
+  newNode->cnt[newNode->color == BLACK][0] = p;
   newNode->parent = NIL;
   newNode->left = NIL;
   newNode->right = NIL;
@@ -74,6 +74,13 @@ void pull(Node *x) {
   x->cnt[x->color == BLACK][0] = x->p;
   x->cnt[x->color != BLACK][0] = 0;
 }
+void pull_layers(Node *x, int layers) {
+  while (x != NIL && layers) {
+    pull(x);
+    x = x->parent;
+    --layers;
+  }
+}
 void pull_til_root(Node *x) {
   while (x != NIL) {
     pull(x);
@@ -100,8 +107,7 @@ void leftRotate(Node **root, Node *x) {
   }
   y->left = x;
   x->parent = y;
-  pull(x);
-  pull(y);
+  pull_til_root(x);
 }
 
 // Right Rotate (CLRS, Ch. 13.2)
@@ -123,9 +129,7 @@ void rightRotate(Node **root, Node *y) {
   }
   x->right = y;
   y->parent = x;
-
-  pull(y);
-  pull(x);
+  pull_til_root(y);
 }
 
 // RB-INSERT-FIXUP (CLRS, Ch. 13.3)
@@ -139,8 +143,8 @@ void rbInsertFixup(Node **root, Node *z) {
         setColor(z->parent, BLACK);
         setColor(y, BLACK);
         setColor(z->parent->parent, RED);
+        pull_layers(z->parent->parent, 3);
         z = z->parent->parent;
-        pull(z);
       } else {
         if (z ==
             z->parent
@@ -151,7 +155,7 @@ void rbInsertFixup(Node **root, Node *z) {
         // Case 3: Uncle y is BLACK and z is a left child
         setColor(z->parent, BLACK);
         setColor(z->parent->parent, RED);
-        pull(z->parent->parent);
+        pull_layers(z->parent->parent, 3);
         rightRotate(root, z->parent->parent);
       }
     } else { // Case 4, 5, 6: z.p is right child (symmetric to 1, 2, 3)
@@ -160,8 +164,8 @@ void rbInsertFixup(Node **root, Node *z) {
         setColor(z->parent, BLACK);
         setColor(y, BLACK);
         setColor(z->parent->parent, RED);
+        pull_layers(z->parent->parent, 3);
         z = z->parent->parent;
-        pull(z);
       } else {
         if (z ==
             z->parent->left) { // Case 5: Uncle y is BLACK and z is a left child
@@ -171,7 +175,7 @@ void rbInsertFixup(Node **root, Node *z) {
         // Case 6: Uncle y is BLACK and z is a right child
         setColor(z->parent, BLACK);
         setColor(z->parent->parent, RED);
-        pull(z->parent->parent);
+        pull_layers(z->parent->parent, 3);
         leftRotate(root, z->parent->parent);
       }
     }
@@ -207,7 +211,7 @@ void rbInsert(Node **root, int key, int p) {
   z->left = NIL;
   z->right = NIL;
   setColor(z, RED);
-  pull(y);
+  pull_til_root(z->parent); // z->parent = y
 
   rbInsertFixup(root, z);
 }
@@ -249,7 +253,7 @@ void rbDeleteFixup(Node **root, Node *x) {
       // Case 2: x's sibling w is black, and both of w's children are black
       if (w->left->color == BLACK && w->right->color == BLACK) {
         setColor(w, RED);
-        pull(w->parent);
+        pull(x->parent);
         x = x->parent;
       } else {
         // Case 3: x's sibling w is black, w.left is red, and w.right is black
@@ -257,7 +261,6 @@ void rbDeleteFixup(Node **root, Node *x) {
           setColor(w->left, BLACK);
           setColor(w, RED);
           pull(w);
-          pull(w->parent);
           rightRotate(root, w);
           w = x->parent->right;
         }
@@ -265,7 +268,6 @@ void rbDeleteFixup(Node **root, Node *x) {
         setColor(w, x->parent->color);
         setColor(x->parent, BLACK);
         setColor(w->right, BLACK);
-        pull(w);
         pull(x->parent);
         leftRotate(root, x->parent);
         x = *root; // Terminate loop
@@ -290,7 +292,6 @@ void rbDeleteFixup(Node **root, Node *x) {
           setColor(w->right, BLACK);
           setColor(w, RED);
           pull(w);
-          pull(w->parent);
           leftRotate(root, w);
           w = x->parent->left;
         }
@@ -324,19 +325,20 @@ void rbDelete(Node **root, Node *z) {
   if (z->left == NIL) {
     x = z->right;
     rbTransplant(root, z, z->right);
-    pull_til_root(x);
+
+    // The status isn't modified here
   } else if (z->right == NIL) {
     x = z->left;
     rbTransplant(root, z, z->left);
-    pull_til_root(x);
+    // The status isn't modified here
   } else {
     y = treeMinimum(z->right); // y is z's successor
     yOriginalColor = y->color;
-    x = y->right; // May be NIL or y->right
+    x = y->right;
     if (y->parent == z) {
       x->parent = y; // Important if x is NIL
     } else {
-      rbTransplant(root, y, y->right);
+      rbTransplant(root, y, y->right); // remove y from current place
       y->right = z->right;
       y->right->parent = y;
     }
@@ -345,6 +347,7 @@ void rbDelete(Node **root, Node *z) {
     y->left->parent = y;
     setColor(y, z->color);
   }
+  pull_til_root(x->parent);
 
   if (yOriginalColor == BLACK) {
     rbDeleteFixup(root, x);
@@ -372,6 +375,15 @@ int getDepth(Node *x) {
     x = x->parent;
   }
   return depth;
+}
+
+void freeTree(Node *x) {
+  if (x == NIL) {
+    return;
+  }
+  freeTree(x->left);
+  freeTree(x->right);
+  free(x);
 }
 
 int main() {
@@ -410,9 +422,11 @@ int main() {
         break;
       ll move = p > unode->p ? unode->p : p;
       unode->p -= move;
+      unode->cnt[unode->color == BLACK][0] -= move;
       vnode->p += move;
-      pull_til_root(unode->parent);
-      pull_til_root(vnode->parent);
+      vnode->cnt[vnode->color == BLACK][0] += move;
+      pull_til_root(unode);
+      pull_til_root(vnode);
       break;
     }
     case 5: {
