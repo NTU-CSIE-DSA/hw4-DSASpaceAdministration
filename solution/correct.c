@@ -93,9 +93,7 @@ void push(Node *x) {
   if (x->lazy == 0)
     return;
   tag(x->left, x->lazy);
-  push(x->left);
   tag(x->right, x->lazy);
-  push(x->right);
   x->lazy = 0;
 }
 void pull(Node *x) {
