@@ -389,7 +389,7 @@ int main() {
       Node *xnode = treeSearch(root, x);
       if (xnode == NIL)
         break;
-      int sz = getSize(xnode) + 1;
+      int sz = (getSize(xnode) - 1) + 1;
       ll distri = xnode->p / sz;
       addPeople(xnode->left, distri);
       addPeople(xnode->right, distri);
