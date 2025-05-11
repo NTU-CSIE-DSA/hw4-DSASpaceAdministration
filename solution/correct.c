@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #define MAXH 38
@@ -60,17 +61,20 @@ Node *createNode(int key, ll p) {
   return newNode;
 }
 
-void setColor(Node *x, Color color) {
-  if (x == NIL)
-    return;
-  if (x->color == color)
-    return;
-  x->color = color;
-  x->nodecnt[x->color == BLACK][0] = 1;
-  x->nodecnt[x->color != BLACK][0] = 0;
-  x->pcnt[x->color == BLACK][0] = x->p;
-  x->pcnt[x->color != BLACK][0] = 0;
-  return;
+int getSize(Node *x) {
+  int sz = 0;
+  for (int i = 0; i < MAXH; ++i) {
+    sz += x->nodecnt[0][i] + x->nodecnt[1][i];
+  }
+  return sz;
+}
+int getDepth(Node *x) {
+  int depth = 0;
+  while (x->parent != NIL) {
+    ++depth;
+    x = x->parent;
+  }
+  return depth;
 }
 
 void tag(Node *x, ll p) {
@@ -89,12 +93,15 @@ void push(Node *x) {
   if (x->lazy == 0)
     return;
   tag(x->left, x->lazy);
+  push(x->left);
   tag(x->right, x->lazy);
+  push(x->right);
   x->lazy = 0;
 }
 void pull(Node *x) {
   if (x == NIL)
     return;
+  assert(x->lazy == 0);
   push(x);
   for (int i = 1; i < MAXH; ++i) {
     x->pcnt[0][i] = x->left->pcnt[0][i - 1] + x->right->pcnt[0][i - 1];
@@ -116,9 +123,23 @@ void pull_layers(Node *x, int layers) {
 }
 void pull_til_root(Node *x) {
   while (x != NIL) {
+    // fprintf(stderr, "pulling %d, depth: %d\n", x->key, getDepth(x));
+    assert(x->lazy == 0);
     pull(x);
     x = x->parent;
   }
+}
+void setColor(Node *x, Color color) {
+  if (x == NIL)
+    return;
+  if (x->color == color)
+    return;
+  x->color = color;
+  x->nodecnt[x->color == BLACK][0] = 1;
+  x->nodecnt[x->color != BLACK][0] = 0;
+  x->pcnt[x->color == BLACK][0] = x->p;
+  x->pcnt[x->color != BLACK][0] = 0;
+  return;
 }
 
 // Left Rotate (CLRS, Ch. 13.2)
@@ -308,6 +329,7 @@ void rbDeleteFixup(Node **root, Node *x) {
         if (w->right->color == BLACK) {
           setColor(w->left, BLACK);
           setColor(w, RED);
+          pull(w);
           rightRotate(root, w);
           w = x->parent->right;
           push(w);
@@ -341,6 +363,7 @@ void rbDeleteFixup(Node **root, Node *x) {
         if (w->left->color == BLACK) {
           setColor(w->right, BLACK);
           setColor(w, RED);
+          pull(w);
           leftRotate(root, w);
           w = x->parent->left;
           push(w);
@@ -352,6 +375,7 @@ void rbDeleteFixup(Node **root, Node *x) {
         pull(w);
         pull(x->parent);
         rightRotate(root, x->parent);
+        pull_til_root(x->parent);
         x = *root; // Terminate loop
       }
     }
@@ -394,10 +418,13 @@ void rbDelete(Node **root, Node *z) {
     y->left = z->left;
     y->left->parent = y;
     setColor(y, z->color);
+    pull(y);
   }
   pull_til_root(x->parent);
 
+  push(x);
   if (yOriginalColor == BLACK) {
+    // fprintf(stderr, "start from %d, depth %d\n", x->key, getDepth(x));
     rbDeleteFixup(root, x);
   }
   free(z); // Free the memory of the deleted node
@@ -416,22 +443,6 @@ Node *treeSearch(Node *x, int key) {
   }
   push(x);
   return x;
-}
-
-int getSize(Node *x) {
-  int sz = 0;
-  for (int i = 0; i < MAXH; ++i) {
-    sz += x->nodecnt[0][i] + x->nodecnt[1][i];
-  }
-  return sz;
-}
-int getDepth(Node *x) {
-  int depth = 0;
-  while (x->parent != NIL) {
-    ++depth;
-    x = x->parent;
-  }
-  return depth;
 }
 
 void freeTree(Node *x) {
@@ -495,12 +506,16 @@ int main() {
       int sz = (getSize(xnode) - 1) + 1;
       ll distri = xnode->p / sz;
       tag(xnode->left, distri);
+      push(xnode->left);
       tag(xnode->right, distri);
+      push(xnode->right);
       ll r = xnode->p - (distri * (sz - 1));
       if (xnode->parent != NIL) {
         xnode->parent->p += r;
+        xnode->parent->pcnt[xnode->color == BLACK][0] += r;
       }
       xnode->p = 0;
+      xnode->pcnt[xnode->color == BLACK][0] = 0;
       pull_til_root(xnode);
       break;
     }

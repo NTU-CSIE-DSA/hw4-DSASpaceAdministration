@@ -327,7 +327,7 @@ ll access_index(Node *x, int xdep, Node *cur, int dep) {
          access_index(x, xdep, cur->right, dep + 1);
 }
 
-void addPeople(Node *x, int p) {
+void addPeople(Node *x, ll p) {
   if (x == NIL)
     return;
   x->p += p;
