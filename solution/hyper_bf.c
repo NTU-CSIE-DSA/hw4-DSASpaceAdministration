@@ -250,31 +250,78 @@ int get_depth(RBNode* node) {
     return depth;
 }
 
+int tree_size(RBNode* x) {
+    if (x == NIL) return 0;
+    return tree_size(x->l) + tree_size(x->r) + 1;
+}
+
 void connect(int x, int p) {
-    RBNode* z = find_node(x);
-    if (z != NIL) return;
-    z = rb_create_node(x, p);
-    rb_insert(z);
+    RBNode* node_x = find_node(x);
+    if (node_x != NIL) return;
+    node_x = rb_create_node(x, p);
+    rb_insert(node_x);
 }
 
 void disconnect(int x) {
-    RBNode* z = find_node(x);
-    if (z == NIL) return;
-    rb_delete(z);
+    RBNode* node_x = find_node(x);
+    if (node_x == NIL) return;
+    rb_delete(node_x);
 }
 
-void distance(int x, int y) {
+void relocate(int u, int v, int p) {
+    if (u == v) return;
+    RBNode *node_u = find_node(u), *node_v = find_node(v);
+    if (node_u == NIL || node_v == NIL) return;
+    if (node_u->pop < p) p = node_u->pop;
+    node_u->pop -= p;
+    node_v->pop += p;
+}
+
+void tree_add(RBNode* x, int p) {
+    if (x == NIL) return;
+    x->pop += p;
+    tree_add(x->l, p);
+    tree_add(x->r, p);
+}
+
+void evacuate(int x) {
+    RBNode* node_x = find_node(x);
+    if (node_x == NIL) return;
+    int size = tree_size(node_x);
+    int p = node_x->pop / size;
+    int r = node_x->pop - p * (size - 1);
+    tree_add(node_x, p);
+    if (node_x != root) node_x->p->pop += r;
+    node_x->pop = 0;
+}
+
+int dis(int x, int y) {
     RBNode *node_x = find_node(x), *node_y = find_node(y);
-    if (node_x == NIL || node_y == NIL) {
+    if (node_x == NIL || node_y == NIL) return -1;
+    int depth_x = get_depth(node_x), depth_y = get_depth(node_y);
+    if (depth_x == depth_y && node_x->c != node_y->c) return 2;
+    return (int)abs(depth_x - depth_y);
+}
+
+void distance(int x, int y) { printf("%lld\n", dis(x, y)); }
+
+int calc(RBNode* w, int depth_x, Color c) {
+    if (w == NIL) return 0;
+    int depth_w = get_depth(w);
+    int d = (int)abs(depth_w - depth_x);
+    if (depth_w == depth_x && w->c != c) d = 2;
+    int val = w->pop * d * d;
+    return calc(w->l, depth_x, c) + calc(w->r, depth_x, c) + val;
+}
+
+void access_index(int x) {
+    RBNode* node_x = find_node(x);
+    if (node_x == NIL) {
         printf("-1\n");
         return;
     }
-    int depth_x = get_depth(node_x), depth_y = get_depth(node_y);
-    if (depth_x == depth_y && node_x->c != node_y->c) {
-        printf("2\n");
-        return;
-    }
-    printf("%d\n", abs(depth_x - depth_y));
+    int depth_x = get_depth(node_x);
+    printf("%lld\n", calc(root, depth_x, node_x->c));
 }
 
 signed main() {
@@ -293,9 +340,18 @@ signed main() {
         } else if (op == 2) {
             assert(scanf("%lld", &x) == 1);
             disconnect(x);
+        } else if (op == 3) {
+            assert(scanf("%lld %lld %lld", &x, &y, &z) == 3);
+            relocate(x, y, z);
+        } else if (op == 4) {
+            assert(scanf("%lld", &x) == 1);
+            evacuate(x);
         } else if (op == 5) {
             assert(scanf("%lld %lld", &x, &y) == 2);
             distance(x, y);
+        } else if (op == 6) {
+            assert(scanf("%lld", &x) == 1);
+            access_index(x);
         }
     }
 }
