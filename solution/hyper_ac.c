@@ -4,289 +4,273 @@
 #include <assert.h>
 #define int long long
 
+// === RB Tree ===
+
 typedef enum { RED, BLACK } Color;
 
 typedef struct RBNode {
-    int data;
-    int population;
-    Color color;
-    struct RBNode *left, *right, *parent;
+    int key, pop;
+    Color c;
+    struct RBNode *l, *r, *p;
 } RBNode;
 
-typedef struct RBTree {
-    RBNode* root;
-    RBNode* null;
-} RBTree;
+RBNode* root;
+RBNode* NIL;
 
-RBNode* rb_create_node(RBTree* T, int data, int population) {
+RBNode* rb_create_node(int key, int pop) {
     RBNode* node = (RBNode*)malloc(sizeof(RBNode));
-    node->data = data;
-    node->population = population;
-    node->color = RED;
-    node->left = node->right = node->parent = T->null;
+    node->key = key;
+    node->pop = pop;
+    node->c = RED;
+    node->l = node->r = node->p = NIL;
     return node;
 }
 
-void left_rotate(RBTree* T, RBNode* x) {
-    RBNode* y = x->right;
-    x->right = y->left;
-    if (y->left != T->null) y->left->parent = x;
-    y->parent = x->parent;
-    if (x->parent == T->null)
-        T->root = y;
-    else if (x == x->parent->left)
-        x->parent->left = y;
+void left_rotate(RBNode* x) {
+    RBNode* y = x->r;
+    x->r = y->l;
+    if (y->l != NIL) y->l->p = x;
+    y->p = x->p;
+    if (x->p == NIL)
+        root = y;
+    else if (x == x->p->l)
+        x->p->l = y;
     else
-        x->parent->right = y;
-    y->left = x;
-    x->parent = y;
+        x->p->r = y;
+    y->l = x;
+    x->p = y;
 }
 
-void right_rotate(RBTree* T, RBNode* y) {
-    RBNode* x = y->left;
-    y->left = x->right;
-    if (x->right != T->null) x->right->parent = y;
-    x->parent = y->parent;
-    if (y->parent == T->null)
-        T->root = x;
-    else if (y == y->parent->left)
-        y->parent->left = x;
+void right_rotate(RBNode* y) {
+    RBNode* x = y->l;
+    y->l = x->r;
+    if (x->r != NIL) x->r->p = y;
+    x->p = y->p;
+    if (y->p == NIL)
+        root = x;
+    else if (y == y->p->l)
+        y->p->l = x;
     else
-        y->parent->right = x;
-    x->right = y;
-    y->parent = x;
+        y->p->r = x;
+    x->r = y;
+    y->p = x;
 }
 
-void rb_fix_insert(RBTree* T, RBNode* z) {
-    while (z->parent->color == RED) {
-        if (z->parent == z->parent->parent->left) {
-            RBNode* y = z->parent->parent->right;
-            if (y->color == RED) {
-                z->parent->color = BLACK;
-                y->color = BLACK;
-                z->parent->parent->color = RED;
-                z = z->parent->parent;
-            } else {
-                if (z == z->parent->right) {
-                    z = z->parent;
-                    left_rotate(T, z);
-                }
-                z->parent->color = BLACK;
-                z->parent->parent->color = RED;
-                right_rotate(T, z->parent->parent);
-            }
-        } else {
-            RBNode* y = z->parent->parent->left;
-            if (y->color == RED) {
-                z->parent->color = BLACK;
-                y->color = BLACK;
-                z->parent->parent->color = RED;
-                z = z->parent->parent;
-            } else {
-                if (z == z->parent->left) {
-                    z = z->parent;
-                    right_rotate(T, z);
-                }
-                z->parent->color = BLACK;
-                z->parent->parent->color = RED;
-                left_rotate(T, z->parent->parent);
-            }
-        }
-    }
-    T->root->color = BLACK;
-}
-
-void rb_insert(RBTree* T, RBNode* z) {
-    RBNode* y = T->null;
-    RBNode* x = T->root;
-    while (x != T->null) {
-        y = x;
-        if (z->data < x->data)
-            x = x->left;
-        else
-            x = x->right;
-    }
-    z->parent = y;
-    if (y == T->null)
-        T->root = z;
-    else if (z->data < y->data)
-        y->left = z;
-    else
-        y->right = z;
-    z->left = T->null;
-    z->right = T->null;
-    z->color = RED;
-    rb_fix_insert(T, z);
-}
-
-void rb_transplant(RBTree* T, RBNode* u, RBNode* v) {
-    if (u->parent == T->null)
-        T->root = v;
-    else if (u == u->parent->left)
-        u->parent->left = v;
-    else
-        u->parent->right = v;
-    v->parent = u->parent;
-}
-
-void rb_fix_delete(RBTree* T, RBNode* x) {
-    RBNode* w;
-    while (x != T->root && x->color == BLACK) {
-        if (x == x->parent->left) {
-            w = x->parent->right;
-            if (w->color == RED) {
-                w->color = BLACK;
-                x->parent->color = RED;
-                left_rotate(T, x->parent);
-                w = x->parent->right;
-            }
-            if (w->left->color == BLACK && w->right->color == BLACK) {
-                w->color = RED;
-                x = x->parent;
-            } else {
-                if (w->right->color == BLACK) {
-                    w->left->color = BLACK;
-                    w->color = RED;
-                    right_rotate(T, w);
-                    w = x->parent->right;
-                }
-                w->color = x->parent->color;
-                x->parent->color = BLACK;
-                w->right->color = BLACK;
-                left_rotate(T, x->parent);
-                x = T->root;
-            }
-        } else {
-            w = x->parent->left;
-            if (w->color == RED) {
-                w->color = BLACK;
-                x->parent->color = RED;
-                right_rotate(T, x->parent);
-                w = x->parent->left;
-            }
-            if (w->right->color == BLACK && w->left->color == BLACK) {
-                w->color = RED;
-                x = x->parent;
-            } else {
-                if (w->left->color == BLACK) {
-                    w->right->color = BLACK;
-                    w->color = RED;
-                    left_rotate(T, w);
-                    w = x->parent->left;
-                }
-                w->color = x->parent->color;
-                x->parent->color = BLACK;
-                w->left->color = BLACK;
-                right_rotate(T, x->parent);
-                x = T->root;
-            }
-        }
-    }
-    x->color = BLACK;
-}
-
-RBNode* find_node(RBTree* T, int data) {
-    RBNode* x = T->root;
-    while (x != T->null) {
-        if (data == x->data)
+RBNode* find_node(int data) {
+    RBNode* x = root;
+    while (x != NIL) {
+        if (data == x->key)
             return x;
-        else if (data < x->data)
-            x = x->left;
+        else if (data < x->key)
+            x = x->l;
         else
-            x = x->right;
+            x = x->r;
     }
-    return T->null;
+    return NIL;
 }
 
-RBNode* minimum(RBTree* T, RBNode* node) {
-    while (node->left != T->null) {
-        node = node->left;
+RBNode* minimum(RBNode* node) {
+    while (node->l != NIL) {
+        node = node->l;
     }
     return node;
 }
 
-void rb_delete(RBTree* T, RBNode* z) {
+void rb_fix_insert(RBNode* z) {
+    while (z->p->c == RED) {
+        if (z->p == z->p->p->l) {
+            RBNode* y = z->p->p->r;
+            if (y->c == RED) {
+                z->p->c = BLACK;
+                y->c = BLACK;
+                z->p->p->c = RED;
+                z = z->p->p;
+            } else {
+                if (z == z->p->r) {
+                    z = z->p;
+                    left_rotate(z);
+                }
+                z->p->c = BLACK;
+                z->p->p->c = RED;
+                right_rotate(z->p->p);
+            }
+        } else {
+            RBNode* y = z->p->p->l;
+            if (y->c == RED) {
+                z->p->c = BLACK;
+                y->c = BLACK;
+                z->p->p->c = RED;
+                z = z->p->p;
+            } else {
+                if (z == z->p->l) {
+                    z = z->p;
+                    right_rotate(z);
+                }
+                z->p->c = BLACK;
+                z->p->p->c = RED;
+                left_rotate(z->p->p);
+            }
+        }
+    }
+    root->c = BLACK;
+}
+
+void rb_insert(RBNode* z) {
+    RBNode* y = NIL;
+    RBNode* x = root;
+    while (x != NIL) {
+        y = x;
+        if (z->key < x->key)
+            x = x->l;
+        else
+            x = x->r;
+    }
+    z->p = y;
+    if (y == NIL)
+        root = z;
+    else if (z->key < y->key)
+        y->l = z;
+    else
+        y->r = z;
+    z->l = NIL;
+    z->r = NIL;
+    z->c = RED;
+    rb_fix_insert(z);
+}
+
+void rb_transplant(RBNode* u, RBNode* v) {
+    if (u->p == NIL)
+        root = v;
+    else if (u == u->p->l)
+        u->p->l = v;
+    else
+        u->p->r = v;
+    v->p = u->p;
+}
+
+void rb_fix_delete(RBNode* x) {
+    RBNode* w;
+    while (x != root && x->c == BLACK) {
+        if (x == x->p->l) {
+            w = x->p->r;
+            if (w->c == RED) {
+                w->c = BLACK;
+                x->p->c = RED;
+                left_rotate(x->p);
+                w = x->p->r;
+            }
+            if (w->l->c == BLACK && w->r->c == BLACK) {
+                w->c = RED;
+                x = x->p;
+            } else {
+                if (w->r->c == BLACK) {
+                    w->l->c = BLACK;
+                    w->c = RED;
+                    right_rotate(w);
+                    w = x->p->r;
+                }
+                w->c = x->p->c;
+                x->p->c = BLACK;
+                w->r->c = BLACK;
+                left_rotate(x->p);
+                x = root;
+            }
+        } else {
+            w = x->p->l;
+            if (w->c == RED) {
+                w->c = BLACK;
+                x->p->c = RED;
+                right_rotate(x->p);
+                w = x->p->l;
+            }
+            if (w->r->c == BLACK && w->l->c == BLACK) {
+                w->c = RED;
+                x = x->p;
+            } else {
+                if (w->l->c == BLACK) {
+                    w->r->c = BLACK;
+                    w->c = RED;
+                    left_rotate(w);
+                    w = x->p->l;
+                }
+                w->c = x->p->c;
+                x->p->c = BLACK;
+                w->l->c = BLACK;
+                right_rotate(x->p);
+                x = root;
+            }
+        }
+    }
+    x->c = BLACK;
+}
+
+void rb_delete(RBNode* z) {
     RBNode* x;
     RBNode* y = z;
-    Color y_orig_color = y->color;
-    if (z->left == T->null) {
-        x = z->right;
-        rb_transplant(T, z, z->right);
-    } else if (z->right == T->null) {
-        x = z->left;
-        rb_transplant(T, z, z->left);
+    Color y_orig_color = y->c;
+    if (z->l == NIL) {
+        x = z->r;
+        rb_transplant(z, z->r);
+    } else if (z->r == NIL) {
+        x = z->l;
+        rb_transplant(z, z->l);
     } else {
-        y = minimum(T, z->right);
-        y_orig_color = y->color;
-        x = y->right;
-        if (y->parent == z) {
-            x->parent = y;
+        y = minimum(z->r);
+        y_orig_color = y->c;
+        x = y->r;
+        if (y->p == z) {
+            x->p = y;
         } else {
-            rb_transplant(T, y, y->right);
-            y->right = z->right;
-            y->right->parent = y;
+            rb_transplant(y, y->r);
+            y->r = z->r;
+            y->r->p = y;
         }
-        rb_transplant(T, z, y);
-        y->left = z->left;
-        y->left->parent = y;
-        y->color = z->color;
+        rb_transplant(z, y);
+        y->l = z->l;
+        y->l->p = y;
+        y->c = z->c;
     }
-    if (y_orig_color == BLACK) rb_fix_delete(T, x);
+    if (y_orig_color == BLACK) rb_fix_delete(x);
     free(z);
 }
 
-void rb_inorder(RBTree* T, RBNode* node) {
-    if (node == T->null) return;
-    rb_inorder(T, node->left);
-    printf("%lld (%s)  ", node->data, node->color == RED ? "R" : "B");
-    rb_inorder(T, node->right);
+void rb_inorder(RBNode* node) {
+    if (node == NIL) return;
+    rb_inorder(node->l);
+    printf("%lld (%s)  ", node->key, node->c == RED ? "R" : "B");
+    rb_inorder(node->r);
 }
 
-RBTree* rb_create_tree() {
-    RBTree* T = (RBTree*)malloc(sizeof(RBTree));
-    T->null = (RBNode*)malloc(sizeof(RBNode));
-    T->null->color = BLACK;
-    T->root = T->null;
-    return T;
-}
-
-int get_depth(RBTree* T, RBNode* node) {
+int get_depth(RBNode* node) {
     int depth = 0;
-    while (node != T->null) {
+    while (node != NIL) {
         depth++;
-        node = node->parent;
+        node = node->p;
     }
     return depth;
 }
 
-RBTree* T;
-
 void connect(int x, int p) {
-    RBNode* z = find_node(T, x);
-    if (z != T->null) return;
-    z = rb_create_node(T, x, p);
-    // printf("[DEBUG] inserting (%lld, %lld)\n", x, p);
-    rb_insert(T, z);
+    RBNode* z = find_node(x);
+    if (z != NIL) return;
+    z = rb_create_node(x, p);
+    rb_insert(z);
 }
 
 void disconnect(int x) {
-    RBNode* z = find_node(T, x);
-    if (z == T->null) return;
-    // printf("[DEBUG] deleting (%lld, %lld)\n", z->data, z->population);
-    rb_delete(T, z);
+    RBNode* z = find_node(x);
+    if (z == NIL) return;
+    rb_delete(z);
 }
 
 void distance(int x, int y) {
-    // printf("[DEBUG] distance(%lld, %lld) = ", x, y);
-    RBNode* node_x = find_node(T, x);
-    RBNode* node_y = find_node(T, y);
-    if (node_x == T->null || node_y == T->null) {
+    RBNode *node_x = find_node(x), *node_y = find_node(y);
+    if (node_x == NIL || node_y == NIL) {
         printf("-1\n");
         return;
     }
-    int depth_x = get_depth(T, node_x);
-    int depth_y = get_depth(T, node_y);
-    if (depth_x == depth_y && node_x->color != node_y->color) {
+    int depth_x = get_depth(node_x), depth_y = get_depth(node_y);
+    if (depth_x == depth_y && node_x->c != node_y->c) {
         printf("2\n");
         return;
     }
@@ -294,7 +278,10 @@ void distance(int x, int y) {
 }
 
 signed main() {
-    T = rb_create_tree();
+    NIL = rb_create_node(0, 0);
+    NIL->c = BLACK;
+    root = NIL;
+
     int q;
     assert(scanf("%lld", &q) == 1);
     while (q--) {
@@ -310,8 +297,5 @@ signed main() {
             assert(scanf("%lld %lld", &x, &y) == 2);
             distance(x, y);
         }
-        // printf("\n[DEBUG] tree: \n");
-        // rb_inorder(T, T->root);
-        // printf("\n\n");
     }
 }
